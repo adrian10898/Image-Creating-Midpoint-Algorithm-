@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		div {
+			margin:0px;
+			outline:none;
+   			vertical-align: top;
+		}
+
+		li {
+			float: left;
+		}
+
+		ul {
+			list-style-type: none;
+			padding: 0;
+			margin: 0;
+			background-color: #000000;
+			overflow: hidden;
+		}
+
+		li a {
+			display: block;
+			text-decoration: none;
+			color: #ffffff;
+			padding: 8px 16px;
+			font-size: 20;
+			text-align: center;
+			font-family: "Open Sans",Helvetica,Arial,Sans-Serif;
+		}
+
+		.pageLink {
+      color: #ffffff;
+			padding: 5px 10px;
+      font-size: 19px;
+		}
+
+		body {
+			font-family: "Open Sans",Helvetica,Arial,Sans-Serif;
+		}
+
+		p {
+			line-height: 1.5em;
+			font-size: 18px;
+		}
+
+		h1 {
+			font-size: 28px;
+    	line-height: 30px;
+   		padding-top: 8px;
+   		font-weight: 600;
+		}
+
+		h2 {
+      		color: #676767;
+      		line-height: 14px;
+      		font-size: 14px;
+		}
+
+    	.code {
+     		line-height: 18px;
+    		font-size: 15px;
+    		margin-left: 50px;
+    	}
+
+   	 	button {
+   		    font-size: large;
+      		background-color: white;
+      		color: black;
+      		border-radius: 0.5rem;
+      		border: 1px solid black;
+      		margin-right: 0.5rem;
+      		margin-bottom: 0.5rem;
+    	}
+
+    	.tileMajor {
+    		width: 400px;
+    		height: 500px;
+    		background-color: white;
+    		border: 2px solid black;
+    		float: left;
+    		border: 1px solid #cccccc;
+    	}
+
+    	.articleLarge {
+    		background: green;
+  			height: 500px;
+  			width: 300px;
+  			display:inline-block;
+  			margin: 10px;
+  			border: 1px solid #cccccc;
+  			background-color: #ffffff;
+  			position: relative;
+    	}
+
+    	.articleSmall {
+    		background: green;
+  			height: 239px;
+  			width: 180px;
+  			display: inline-block;
+  			margin: 10px;
+  			border: 1px solid #cccccc;
+  			background-color: #ffffff;
+  			position: relative;
+    	}
+
+    	.articleContainer {
+    		text-align: center; 
+    		display:inline-block;
+  			position: relative;
+    	}
+
+    	.title {
+    		color: #000000;
+    		transition: color 0.2s ease-out;
+    		text-decoration: none;
+    		cursor: auto;
+    		line-height: 24px;
+    		font-size: 22px;
+    		font-weight: 600;
+    		text-align: left;
+    	}
+
+    	.title:hover {
+    		color: #bfbfbf;
+    	}
+
+    	.subTitle {
+    		color: #333;
+    		line-height: 1.5em;
+    		font-size: 16px;
+    		font-weight: 400;
+    	}
+
+    	.timeStamp {
+    		font-size: 12px;
+    		color: #b3b3b3;
+
+    		text-align: right;
+    	}
+
+    	.titleSmall {
+    		color: #000000;
+    		transition: color 0.2s ease-out;
+    		text-decoration: none;
+    		cursor: auto;
+    		line-height: 10px;
+    		font-size: 16px;
+    		font-weight: 600;
+    		text-align: left;
+    	}
+
+    	.titleSmall:hover {
+    		color: #bfbfbf;
+    	}
+
+    	.subTitleSmall {
+    		color: #333;
+    		line-height: 0em;
+    		font-size: 12px;
+    		font-weight: 400;
+    	}
+
+    	.notice {
+    		background-color: #ffffff;
+    		text-align: center;
+    		display: block;
+    		position: relative;
+    		border: 1px solid #cccccc;
+    		color: #676767;
+    	}
+	</style>
+</head>
+
+<script src="processing.js"></script>
+<script type="text/processing" data-processing-target="snakePreview">
+float t = 0;
+int l = 50;
+int n = 20;
+float r = 40;
+float seperation = 0.005;
+float seperationAngle = 2*PI/n;
+
+float a(float t) {
+  return 100*sin(7*PI*t);
+}
+
+float b(float t) {
+  return 50*cos(5*PI*t);
+}
+
+void setup() {
+  size(300, 200);
+  //strokeWeight(5);
+  colorMode(HSB, 360, 100, 100);
+}
+
+void draw() {
+  background(0);
+  
+  fill(255, 100);
+  translate(width/2, height/2);
+  
+  for (int x=0; x<l; x++) {
+    stroke(360*t%360, 97, 100, 100);
+    ellipse(a(t+x*seperation), b(t+x*seperation), 10, 10);
+  }
+  
+  t += 0.001;
+}
+</script>
+
+<script type="text/processing" data-processing-target="veroniPreview">
+PointSet test;
+int count = 0, vmax = 7;
+
+class Point {
+  int x, y, r=10;
+  
+  Point(int tx, int ty) {
+    x = tx;
+    y = ty;
+  }
+  
+  void draw() {
+    ellipse(x, y, 2*r, 2*r);
+  }
+  
+  Boolean selected() {
+    float d = sqrt((x-mouseX)*(x-mouseX) + (y-mouseY)*(y-mouseY));
+    if (d<r) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+class PointSet {
+  Point[] points;
+  int n;
+  float[][] vectors;
+  
+  PointSet(int tn) {
+    n = tn;
+    points = new Point[n];
+    vectors = new float[n][2];
+    
+    for (int x=0; x<n; x++) {
+      points[x] = new Point(int(random(width)), int(random(height)));
+      vectors[x][0] = vmax-random(2*vmax); vectors[x][1] = vmax-random(2*vmax);
+    }
+  }
+  
+  void draw() {
+    for (int x=0; x<n; x++) {
+      points[x].draw();
+    }
+  }
+  
+  void renderConnections(int p) {
+
+    float[] distances = new float[n];
+    
+    for (int x=0; x<n; x++) {
+      if (x != p) {
+        distances[x] = distance(points[p], points[x]);
+      }
+    }
+    
+    float[] min1 = {0, 10000}, min2 = {0, 10000}, min3 = {0, 10000};
+    
+    for (int x=0; x<n; x++) {
+      if (x != p) {
+        if (distances[x] < min1[1]) {
+          min3[0] = min2[0]; min3[1] = min2[1];
+          min2[0] = min1[0]; min2[1] = min1[1];
+          min1[0] = x; min1[1] = distances[x];
+        } else if (distances[x] < min2[1]) {
+          min3[0] = min2[0]; min3[1] = min2[1];
+          min2[0] = x; min2[1] = distances[x];
+        } else if (distances[x] < min3[1]) {
+          min3[0] = x; min3[1] = distances[x];
+        }
+      }
+    }
+    
+    stroke((p*360/n+count)%360, 97, 100);
+    line(points[p].x, points[p].y, points[int(min1[0])].x, points[int(min1[0])].y);
+    
+    
+    line(points[p].x, points[p].y, points[int(min2[0])].x, points[int(min2[0])].y);
+    
+    
+    line(points[p].x, points[p].y, points[int(min3[0])].x, points[int(min3[0])].y);
+  }
+  
+  void Reload() {
+    for (int x=0; x<n; x++) {
+      renderConnections(x);
+    }
+  }
+  
+  void addVectors() {
+    for (int x=0; x<n; x++) {
+      if (points[x].x + int(vectors[x][0]) < 0 || points[x].x + int(vectors[x][0]) > width) {
+        vectors[x][0] = -1*vectors[x][0];
+      } else {
+        points[x].x = points[x].x + int(vectors[x][0]);
+      } if (points[x].y + int(vectors[x][1]) < 0 || points[x].y + int(vectors[x][1]) > height) {
+        vectors[x][1] = -1*vectors[x][1];
+      } else {
+        points[x].y = points[x].y + int(vectors[x][1]);
+      }
+    }
+    
+    colorMode(RGB); background(0);
+    colorMode(HSB, 360, 100, 100);
+    
+    for (int x=0; x<n; x++) {
+      //points[x].draw();
+      renderConnections(x);
+    }
+  }
+}
+
+float distance(Point a, Point b) {
+  float e1 = a.x - b.x; float e2 = a.y - b.y;
+  return sqrt(e1*e1+e2*e2);
+}
+
+void setup() {
+  
+  size(300, 200);
+  //fullScreen(P2D);
+  colorMode(HSB, 360, 100, 100);
+  
+  test = new PointSet(50);
+  
+}
+
+void draw() {
+  count++;
+  if (count%3==0) {
+    test.addVectors();
+  }
+}
+</script>
+
+<body>
+	<div style="width: 100%;">
+	<ul>
+		<li><a class="logo" href="homePage.html"><img src="LogoSmall.png" style="width: 304px; height: 50px;"/></image></a></li>
+		<li>
+    <div style="padding:20px;"><a class="pageLink" href="snakePage.html" onmouseover="mouseOver1()" onmouseout="mouseOut1()">BEST OF THE WEEK</a>
+    <div id="bar1" style="height: 5px; background-color: #000000;"></div>
+    <script>
+      function mouseOver1() {
+          document.getElementById("bar1").style.backgroundColor = "#00ff00";
+      }
+      function mouseOut1() {
+          document.getElementById("bar1").style.backgroundColor = "#000000";
+      }
+    </script>
+    </div>
+    </li>
+
+		<li>
+    <div style="padding:20px;"><a class="pageLink" href="screwVeroni.html" onmouseover="mouseOver2()" onmouseout="mouseOut2()">MOST POTENTIAL</a>
+    <div id="bar2" style="height: 5px; background-color: #000000;"></div>
+    <script>
+      function mouseOver2() {
+          document.getElementById("bar2").style.backgroundColor = "#ff3300";
+      }
+      function mouseOut2() {
+          document.getElementById("bar2").style.backgroundColor = "#000000";
+      }
+    </script>
+    </div>
+    </li>
+
+		<li style="float: right; padding:20px;"><a class="pageLink" href="aboutPage.html">ABOUT</a></li>
+	</ul>
+	</div>
+	
+	<div style="background-color: #f2f2f2; padding: 30px; text-align: center;">
+		<div class="articleContainer" style="width: 60%;">
+
+			<div class="articleLarge" style="">
+				<a class="title" href="snakePage.html"><canvas id="snakePreview" style="margin:0px; outline:none; vertical-align: top;"></canvas></a>
+				<div style="background-color: #00ff00; height: 10px; outline: none; vertical-align: top;"> </div>
+				<div style="margin: 20px; text-align: left;">
+				<a class="title" href="snakePage.html">The Beautiful Mathematics behind Nature</a>
+				<p class="subTitle">By Cale Retoto</p>
+				</div>
+				<div style="height: 30px; bottom: 10px; position: absolute; width: 95%">
+					<p class="timeStamp">Posted 9 hours ago</p>
+				</div>					
+			</div>
+
+			<div class="articleLarge" style=""> 
+				<a class="title" href="screwVeroni.html"><canvas id="veroniPreview" style="margin:0px; outline:none; vertical-align: top;"></canvas></a>
+				<div style="background-color: #ff3300; height: 10px; outline: none; vertical-align: top;"> </div>
+				<div style="margin: 20px; text-align: left;">
+				<a class="title" href="screwVeroni.html">What do you do when you can't make Voronoi work?</a>
+				<p class="subTitle">By Ellie Lichtman</p>
+				</div>
+				<div style="height: 30px; bottom: 10px; position: absolute; width: 95%">
+					<p class="timeStamp">Posted 24 hours ago</p>
+				</div>
+			</div>
+		</div> 
+
+		<div class="articleContainer" style="width: 38%;">
+
+
+			<div class="articleSmall" style="">
+				<a class="title" href="fillerPage.html"><img src="mandelbrotPreview.png" style="margin:0px; outline:none; vertical-align: top; width: 180px; height: 120px;"></img></a>
+				<div style="background-color: #000000; height: 10px; outline: none; vertical-align: top;"> </div>
+				<div style="margin: 10px; text-align: left;">
+				<a class="titleSmall" href="fillerPage.html">Mandelbrot set easily rendered</a>
+				<p class="subTitleSmall">By Nic Craig</p>
+				</div>
+				<div style="height: 30px; bottom: 10px; position: absolute; width: 95%">
+					<p class="timeStamp">Posted 1 day ago</p>
+				</div>			
+			</div>
+
+
+			<div class="articleSmall" style=""> 
+				<a class="title" href="fillerPage.html"><img src="gameoflifePreview.png" style="margin:0px; outline:none; vertical-align: top; width: 180px; height: 120px;"></img></a>
+				<div style="background-color: #ff33cc; height: 10px; outline: none; vertical-align: top;"> </div>
+				<div style="margin: 10px; text-align: left;">
+				<a class="titleSmall" href="fillerPage.html">The Game of Life</a>
+				<p class="subTitleSmall">By Zac Hearn</p>
+				</div>
+				<div style="height: 30px; bottom: 10px; position: absolute; width: 95%">
+					<p class="timeStamp">Posted 2 days ago</p>
+				</div>			
+			</div>
+
+
+			<div class="articleSmall" style="">
+				<a class="title" href="fillerPage.html"><img src="fractalsPreview.png" style="margin:0px; outline:none; vertical-align: top; width: 180px; height: 120px;"></img></a>
+				<div style="background-color: #0066ff; height: 10px; outline: none; vertical-align: top;"> </div>
+				<div style="margin: 10px; text-align: left;">
+				<a class="titleSmall" href="fillerPage.html">New way of rendering fractals?</a>
+				<p class="subTitleSmall">By James Hare</p>
+				</div>
+				<div style="height: 30px; bottom: 10px; position: absolute; width: 95%">
+					<p class="timeStamp">Posted 4 days ago</p>
+				</div>		
+			</div>
+
+
+			<div class="articleSmall" style=""> 
+				<a class="title" href="fillerPage.html"><img src="polygonPreview.png" style="margin:0px; outline:none; vertical-align: top; width: 180px; height: 120px;"></img></a>
+				<div style="background-color: #ffff00; height: 10px; outline: none; vertical-align: top;"> </div>
+				<div style="margin: 10px; text-align: left;">
+				<a class="titleSmall" href="fillerPage.html">Simple iteration produces 3D figures</a>
+				<p class="subTitleSmall">By Adrian Kruuse</p>
+				</div>
+				<div style="height: 30px; bottom: 10px; position: absolute; width: 95%">
+					<p class="timeStamp">Posted 6 days ago</p>
+				</div>		
+			</div>
+		</div>
+
+		<br /><br />
+		<div class="notice" style="height: 100px;">
+			<br />
+			<img src="load_more.png" ></img>
+			<p style="margin-top: 0px;">MORE COMING SOON</p>
+		</div>
+
+	</div>
+
+</body>
+</html>
+

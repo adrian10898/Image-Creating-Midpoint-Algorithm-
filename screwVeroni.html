@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		div {
+			margin:0px;
+			outline:none;
+   			vertical-align: top;
+		}
+
+		li {
+			float: left;
+		}
+
+		ul {
+			list-style-type: none;
+			padding: 0;
+			margin: 0;
+			background-color: #000000;
+			overflow: hidden;
+		}
+
+		li a {
+			display: block;
+			text-decoration: none;
+			color: #ffffff;
+			padding: 8px 16px;
+			font-size: 20;
+			text-align: center;
+			font-family: "Open Sans",Helvetica,Arial,Sans-Serif;
+		}
+
+		.pageLink {
+			color: #ffffff;
+      padding: 5px 10px;
+      font-size: 19px;
+		}
+
+		body {
+			font-family: "Open Sans",Helvetica,Arial,Sans-Serif;
+		}
+
+		p {
+			line-height: 1.5em;
+			font-size: 18px;
+		}
+
+		h1 {
+			font-size: 28px;
+    	line-height: 30px;
+   		padding-top: 8px;
+   		font-weight: 600;
+		}
+
+		h2 {
+      color: #676767;
+      line-height: 14px;
+      font-size: 14px;
+		}
+
+    .code {
+      font-size: 15px;
+      line-height: 20px;
+      margin-left: 40px;
+      background-color: #f5f5f5;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      width: 80%;
+      font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+    }
+
+    button {
+      font-size: large;
+      background-color: white;
+      color: black;
+      border-radius: 0.5rem;
+      border: 1px solid black;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+	</style>
+</head>
+
+<script src="processing.js"></script>
+<script type="text/processing" data-processing-target="headerCanvas">
+PointSet test;
+int count = 0, vmax = 7;
+
+class Point {
+  int x, y, r=10;
+  
+  Point(int tx, int ty) {
+    x = tx;
+    y = ty;
+  }
+  
+  void draw() {
+    ellipse(x, y, 2*r, 2*r);
+  }
+  
+  Boolean selected() {
+    float d = sqrt((x-mouseX)*(x-mouseX) + (y-mouseY)*(y-mouseY));
+    if (d<r) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+class PointSet {
+  Point[] points;
+  int n;
+  float[][] vectors;
+  
+  PointSet(int tn) {
+    n = tn;
+    points = new Point[n];
+    vectors = new float[n][2];
+    
+    for (int x=0; x<n; x++) {
+      points[x] = new Point(int(random(width)), int(random(height)));
+      vectors[x][0] = vmax-random(2*vmax); vectors[x][1] = vmax-random(2*vmax);
+    }
+  }
+  
+  void draw() {
+    for (int x=0; x<n; x++) {
+      points[x].draw();
+    }
+  }
+  
+  void renderConnections(int p) {
+
+    float[] distances = new float[n];
+    
+    for (int x=0; x<n; x++) {
+      if (x != p) {
+        distances[x] = distance(points[p], points[x]);
+      }
+    }
+    
+    float[] min1 = {0, 10000}, min2 = {0, 10000}, min3 = {0, 10000};
+    
+    for (int x=0; x<n; x++) {
+      if (x != p) {
+        if (distances[x] < min1[1]) {
+          min3[0] = min2[0]; min3[1] = min2[1];
+          min2[0] = min1[0]; min2[1] = min1[1];
+          min1[0] = x; min1[1] = distances[x];
+        } else if (distances[x] < min2[1]) {
+          min3[0] = min2[0]; min3[1] = min2[1];
+          min2[0] = x; min2[1] = distances[x];
+        } else if (distances[x] < min3[1]) {
+          min3[0] = x; min3[1] = distances[x];
+        }
+      }
+    }
+    
+    stroke((p*360/n+count)%360, 97, 100);
+    line(points[p].x, points[p].y, points[int(min1[0])].x, points[int(min1[0])].y);
+    
+    
+    line(points[p].x, points[p].y, points[int(min2[0])].x, points[int(min2[0])].y);
+    
+    
+    line(points[p].x, points[p].y, points[int(min3[0])].x, points[int(min3[0])].y);
+  }
+  
+  void Reload() {
+    for (int x=0; x<n; x++) {
+      renderConnections(x);
+    }
+  }
+  
+  void addVectors() {
+    for (int x=0; x<n; x++) {
+      if (points[x].x + int(vectors[x][0]) < 0 || points[x].x + int(vectors[x][0]) > width) {
+        vectors[x][0] = -1*vectors[x][0];
+      } else {
+        points[x].x = points[x].x + int(vectors[x][0]);
+      } if (points[x].y + int(vectors[x][1]) < 0 || points[x].y + int(vectors[x][1]) > height) {
+        vectors[x][1] = -1*vectors[x][1];
+      } else {
+        points[x].y = points[x].y + int(vectors[x][1]);
+      }
+    }
+    
+    colorMode(RGB); background(0);
+    colorMode(HSB, 360, 100, 100);
+    
+    for (int x=0; x<n; x++) {
+      //points[x].draw();
+      renderConnections(x);
+    }
+  }
+}
+
+float distance(Point a, Point b) {
+  float e1 = a.x - b.x; float e2 = a.y - b.y;
+  return sqrt(e1*e1+e2*e2);
+}
+
+void setup() {
+  
+  size(998, 400);
+  //fullScreen(P2D);
+  colorMode(HSB, 360, 100, 100);
+  
+  test = new PointSet(100);
+  
+}
+
+void draw() {
+  count++;
+  if (count%3==0) {
+    test.addVectors();
+  }
+}
+
+void mousePressed() {
+}
+
+void keyPressed() {
+  colorMode(RGB); background(0);
+  colorMode(HSB, 360, 100, 100);
+  test = new PointSet(500);
+  test.Reload();
+}
+</script>
+
+<script type="text/processing" data-processing-target="interactiveCanvas">
+PointSet test2;
+int count2 = 0, vmax2 = 7;
+boolean renderPoints = true, renderConnections = false, applyVelocity = false;
+
+class Point {
+  int x, y, r=5;
+  
+  Point(int tx, int ty) {
+    x = tx;
+    y = ty;
+  }
+  
+  void draw() {
+    fill(0);
+    ellipse(x, y, 2*r, 2*r);
+  }
+  
+  Boolean selected() {
+    float d = sqrt((x-mouseX)*(x-mouseX) + (y-mouseY)*(y-mouseY));
+    if (d<r) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+class PointSet {
+  Point[] points;
+  int n;
+  float[][] vectors;
+  
+  PointSet(int tn) {
+    n = tn;
+    points = new Point[n];
+    vectors = new float[n][2];
+    
+    for (int x=0; x<n; x++) {
+      points[x] = new Point(int(random(20, width-20)), int(random(20, height-20)));
+      vectors[x][0] = vmax2-random(2*vmax2); vectors[x][1] = vmax2-random(2*vmax2);
+    }
+  }
+  
+  void draw() {
+    for (int x=0; x<n; x++) {
+      points[x].draw();
+    }
+  }
+  
+  void renderConnections(int p) {
+    float[] distances = new float[n];
+    
+    for (int x=0; x<n; x++) {
+      if (x != p) {
+        distances[x] = distance(points[p], points[x]);
+      }
+    }
+    
+    float[] min1 = {0, 10000}, min2 = {0, 10000}, min3 = {0, 10000};
+    
+    for (int x=0; x<n; x++) {
+      if (x != p) {
+        if (distances[x] < min1[1]) {
+          min3[0] = min2[0]; min3[1] = min2[1];
+          min2[0] = min1[0]; min2[1] = min1[1];
+          min1[0] = x; min1[1] = distances[x];
+        } else if (distances[x] < min2[1]) {
+          min3[0] = min2[0]; min3[1] = min2[1];
+          min2[0] = x; min2[1] = distances[x];
+        } else if (distances[x] < min3[1]) {
+          min3[0] = x; min3[1] = distances[x];
+        }
+      }
+    }
+    
+    line(points[p].x, points[p].y, points[int(min1[0])].x, points[int(min1[0])].y);
+    
+    
+    line(points[p].x, points[p].y, points[int(min2[0])].x, points[int(min2[0])].y);
+    
+    
+    line(points[p].x, points[p].y, points[int(min3[0])].x, points[int(min3[0])].y);
+  }
+  
+  void Reload() {
+    for (int x=0; x<n; x++) {
+      renderConnections(x);
+    }
+  }
+  
+  void addVectors() {
+    for (int x=0; x<n; x++) {
+      if (points[x].x + int(vectors[x][0]) < 10 || points[x].x + int(vectors[x][0]) > width-10) {
+        vectors[x][0] = -1*vectors[x][0];
+      } else {
+        points[x].x = points[x].x + int(vectors[x][0]);
+      } if (points[x].y + int(vectors[x][1]) < 10 || points[x].y + int(vectors[x][1]) > height-10) {
+        vectors[x][1] = -1*vectors[x][1];
+      } else {
+        points[x].y = points[x].y + int(vectors[x][1]);
+      }
+    }
+    
+    background(255);
+    reload();
+  }
+}
+
+float distance(Point a, Point b) {
+  float e1 = a.x - b.x; float e2 = a.y - b.y;
+  return sqrt(e1*e1+e2*e2);
+}
+
+void setup() {
+  
+  size(400, 400);
+  background(255);
+  
+  test2 = new PointSet(100);
+  reload();
+}
+
+void draw() {
+  count2++;
+  if (count2%3==0 && applyVelocity) {
+    test2.addVectors();
+  }
+}
+
+void reload() {
+  background(238,238,238);
+  if (renderPoints) {
+    test2.draw();
+  } if (renderConnections) {
+    test2.Reload();
+  }
+}
+
+void Points() {
+  if (renderPoints) {
+    renderPoints = false;
+  } else {
+    renderPoints = true;
+  }
+  
+  reload();
+}
+
+void Connections() {
+  if (renderConnections) {
+    renderConnections = false;
+  } else {
+    renderConnections = true;
+  }
+  
+  reload();
+}
+
+void Velocity() {
+  if (applyVelocity) {
+    applyVelocity = false;
+  } else {
+    applyVelocity = true;
+  }
+}
+
+void Restart() {
+  test2 = new PointSet(100);
+  reload();
+}
+
+</script>
+
+<script type="text/javascript">
+  function jPoints() {
+    var pjs = Processing.getInstanceById("interactiveCanvas");
+    pjs.Points();
+  }
+
+  function jConnections() {
+    var pjs = Processing.getInstanceById("interactiveCanvas");
+    pjs.Connections();
+  }
+
+  function jVelocity() {
+    var pjs = Processing.getInstanceById("interactiveCanvas");
+    pjs.Velocity();
+  }
+
+  function jRestart() {
+    var pjs = Processing.getInstanceById("interactiveCanvas");
+    pjs.Restart();
+  }
+</script>
+
+<body>
+	<div style="width: 100%;">
+  <ul>
+    <li><a class="logo" href="homePage.html"><img src="LogoSmall.png" style="width: 304px; height: 50px;"/></image></a></li>
+    <li>
+    <div style="padding:20px;"><a class="pageLink" href="snakePage.html" onmouseover="mouseOver1()" onmouseout="mouseOut1()">BEST OF THE WEEK</a>
+    <div id="bar1" style="height: 5px; background-color: #000000;"></div>
+    <script>
+      function mouseOver1() {
+          document.getElementById("bar1").style.backgroundColor = "#00ff00";
+      }
+      function mouseOut1() {
+          document.getElementById("bar1").style.backgroundColor = "#000000";
+      }
+    </script>
+    </div>
+    </li>
+
+    <li>
+    <div style="padding:20px;"><a class="pageLink" href="screwVeroni.html" onmouseover="mouseOver2()" onmouseout="mouseOut2()">MOST POTENTIAL</a>
+    <div id="bar2" style="height: 5px; background-color: #000000;"></div>
+    <script>
+      function mouseOver2() {
+          document.getElementById("bar2").style.backgroundColor = "#ff3300";
+      }
+      function mouseOut2() {
+          document.getElementById("bar2").style.backgroundColor = "#000000";
+      }
+    </script>
+    </div>
+    </li>
+
+    <li style="float: right; padding:20px;"><a class="pageLink" href="aboutPage.html">ABOUT</a></li>
+  </ul>
+  </div>
+	
+	<div style="width: 100%; background-color: #f2f2f2;">
+	<div style="width: 80%; border-right: 2px solid #b3b3b3; border-left: 2px solid #b3b3b3; border-bottom: 2px solid #b3b3b3; margin:0 auto; background-color: #ffffff;">
+    <div style="text-align: center;">
+		<canvas id="headerCanvas" style="margin:0px; outline:none; vertical-align: top;"></canvas>
+    </div>
+
+		<div style="background-color: #ff3300; height: 20px; margin:0px; outline: none; vertical-align: top;"></div>
+		<!--word content-->
+		<div style="width: 70%; margin:0 auto; background-color: #ffffff; padding: 0;"> 
+		<h1>What do you do when you can't make Voronoi work?</h1>
+		<h2>By Ellie Lichtman</h2>
+		<p>
+			One of the most interesting facets of programming is the generation of random terrain. It has become an integral part of many familiar games like Minecraft and Sims, providing an exclusive experience to all its players. 
+			<br/><br/>
+			Yet the mathematics behind the process of random terrain generation is exponentially more complicated.  I realised I needed to understand the fundamentals before tackling the larger challenge. 
+      <br/><br/>
+      Unlike a traditional map grid pattern I had to implement an indiscriminate collection of tiles like those seen below:
+      <br/><br/>
+		</p>
+
+    <div style="text-align: center"> 
+      <img src="veroniDiagram.png" style="width: 100%; height: 400px;">
+    </div>
+
+    <p>
+      The traditional method of random polygon generation follows the Voronoi process. But this idea was soon abandoned due to several intrinsic flaws.
+      <br/><br/>
+      For this reason I decided to design my own algorithm for generating random polygons, the results of which are surprisingly beautiful.
+      <br/><br/>
+      Like the Voronoi method I began with a randomly distributed set of points. I then tried connecting each point in the set to its closest three neighbours, thinking it would produce many polygons with vertices corresponding to the randomly distributed points. I did not anticipate how hard it was to automate using computational logic. 
+      <br/><br/>
+      Here is my final solution after many false starts:
+      <br/><br/> 
+    </p>
+
+		<p class="code"> 
+    float[] distances = new float[n];<br/>
+    <br/>
+    for (int x=0; x<=n; x++) {<br/>
+     &nbsp if (x != p) {<br/>
+     &nbsp &nbsp distances[x] = distance(points[p], points[x]);<br/>
+     &nbsp }<br/>
+    }<br/>
+    <br/>
+    float[] min1 = {0, 10000}, min2 = {0, 10000}, min3 = {0, 10000};<br/>
+    <br/>
+    for (int x=0; x<=n; x++) {<br/>
+     &nbsp if (x != p) {<br/>
+     &nbsp &nbsp if (distances[x] < min1[1]) {<br/>
+     &nbsp &nbsp &nbsp min3[0] = min2[0]; min3[1] = min2[1];<br/>
+     &nbsp &nbsp &nbsp min2[0] = min1[0]; min2[1] = min1[1];<br/>
+     &nbsp &nbsp &nbsp min1[0] = x; min1[1] = distances[x];<br/>
+     &nbsp } else if (distances[x] < min2[1]) {<br/>
+     &nbsp &nbsp &nbsp min3[0] = min2[0]; min3[1] = min2[1];<br/>
+     &nbsp &nbsp &nbsp min2[0] = x; min2[1] = distances[x];<br/>
+     &nbsp } else if (distances[x] < min3[1]) {<br/>
+     &nbsp &nbsp &nbsp min3[0] = x; min3[1] = distances[x];<br/>
+     &nbsp }<br/>
+     }<br/>
+		</p>
+    
+    <p>
+      As you can see, this solution implements multiple "for loops" to cycle between each of the randomly generated points. The initial loop calculates the distance between one point and the remainder. Later three distinct variables are defined to store both the index and the value of the closest three distances. The final loop then progresses through the individual distances and allocates the variables respectively.
+      <br /><br />
+      Connecting each of these points with a line produced the following results:
+      <br /> <br />
+    </p>
+
+    <div style="text-align: center"> 
+      <img src="processExample.png" style="width: 100%; height: 400px;">
+    </div>
+
+    <p>
+      So, although I did not quite achieve the uniformly distributed polygons that I wanted, I was still able to produce an interesting result. 
+      <br /><br />
+      Each point connected itself to three others, meaning the most common inscribed shape was a triangle. Because these were formed through the closest three points many of the triangles were very small and left large spaces uncovered. 
+      <br /><br />
+      After this, I decided to apply a random velocity vector to each of the points. As such, each frame of the animation would re-render the connections as they continuously changed.  
+      <br /><br />
+      So the points did not move apart indefinitely, the borders of the screen were implemented as limits, after which the x or y component of the velocity was reversed. Put simply, each of the points was treated as an elastic ball that moved within the screen and rebounded of its walls. After applying a unique colour to each of the points the final result was produced. 
+      <br /><br />
+      The following interactive highlights each of the discussed steps:
+      <br /><br />
+    </p>
+
+    <div style="background-color: #ff3300; height: 20px; margin:0px; outline: none; vertical-align: top;"></div>
+    <div style="background-color: #eee; height: 500px; border-right: 2px solid #b3b3b3; border-left: 2px solid #b3b3b3;"> 
+      <br />
+      <div style="text-align: center;"> 
+        <button onclick="jRestart()">Randomise Points</button>
+      </div>
+      <div style="text-align: center;"> 
+        <button onclick="jPoints()">Draw Points</button>
+        <button onclick="jConnections()">Draw Connections</button>
+        <button onclick="jVelocity()">Apply Velocity Vector</button>
+      </div>
+      <div style="text-align:center;"> 
+        <canvas id="interactiveCanvas" ></canvas>
+      </div>
+    </div>
+    <div style="background-color: #ff3300; height: 20px; margin:0px; outline: none; vertical-align: top;"></div>
+
+    <p>
+      Fascinating results I thought. Not sure how they could be usefully applied but I was definitely interested in sharing. Could possibly be used to resemble the random nature of lightning?
+      <br /><br />
+    </p>
+		</div>
+
+	</div>
+  <br />
+	</div>
+
+</body>
+</html>
+
